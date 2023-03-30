@@ -36,7 +36,7 @@ function extractData(document) {
             const time = fields[i + 1].textContent;
             const timeFrom = parseInt(time.split("-")[0].split(":")[0]);
             const timeTo = parseInt(time.split("-")[1].split(":")[0]);
-            
+
             data.push({
                 room: fields[i + 2].textContent.replace(" »", ""),
                 time: currDay + "-" + timeFrom + "/" + (timeTo - timeFrom)

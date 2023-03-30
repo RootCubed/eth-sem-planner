@@ -8,7 +8,7 @@ class Application {
 
     public timetable: TimetableView = new TimetableView();
     public coursePickerView: CoursePickerView = new CoursePickerView();
-    
+
     parseCourses(resourceObject: CourseData) {
         this.courses.clear();
         for (const courseID in resourceObject) {
@@ -22,7 +22,7 @@ class Application {
 
                 const el = resourceObject[courseID].hours[hourType];
                 courseHoursReq.set(hourType, el.hourCount);
-    
+
                 const periods: CoursePeriod[] = el.hours.map(h => {
                     const time = CoursePeriodTime.fromPeriodTimeString(h.time);
                     return new CoursePeriod(hourType, h.room, time, course);
@@ -44,7 +44,7 @@ const app = new Application();
 
 fetch("/resources/FS23").then(res => res.json()).then((courseData: CourseData) => {
     app.parseCourses(courseData);
-    
+
     // Hardcoded for now
     const initialCourseSelection = [
         "Tuesday-10/2.HG E 7", "Thursday-10/2.HG E 7", "Wednesday-10/2.HG E 33.5",
@@ -58,7 +58,7 @@ fetch("/resources/FS23").then(res => res.json()).then((courseData: CourseData) =
     for (const [, course] of app.courses) {
         for (const [, hours] of course.periods) {
             for (const period of hours) {
-                if (initialCourseSelection.includes(period.uniqueID)) {
+                if (initialCourseSelection.indexOf(period.uniqueID) > -1) {
                     courseSelection.add(period);
                 }
             }

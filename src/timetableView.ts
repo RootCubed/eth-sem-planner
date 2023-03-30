@@ -51,23 +51,23 @@ class TimetablePeriodGroup {
         this.position.end = Math.max(...this.periods.map(p => p.time.end));
     }
 
-    private _html(config: HTMLOutputConfig) {    
+    private _html(config: HTMLOutputConfig) {
         const occupied: Set<string> = new Set();
         const periodPositions: [number, number][] = [];
-    
+
         for (const period of this.periods) {
             const row = period.time.begin - this.begin;
-    
+
             let col = 0;
             while (occupied.has(row + "," + col)) col++;
-            
+
             for (let x = 0; x < period.time.duration; x++) {
                 occupied.add(row + x + "," + col);
             }
-    
+
             periodPositions.push([row, col]);
         }
-        
+
         let html = "";
         let numCols = 1;
 
@@ -76,13 +76,13 @@ class TimetablePeriodGroup {
             const pPos = periodPositions[i];
 
             numCols = Math.max(numCols, pPos[1] + 1);
-    
+
             const innerHTML = config.periodHTML(period);
 
             const style = `grid-column: ${pPos[1] + 1}; grid-row: ${pPos[0] + 1} / ${pPos[0] + period.time.duration + 1}`;
             html += `<div class="${config.periodClass} ${period.type}" style="${style}" data-id="${period.uniqueID}">${innerHTML}</div>`;
         }
-        
+
         if (!config.skipEmpty) {
             for (let c = 0; c < numCols; c++) {
                 for (let r = 0; r < this.duration; r++) {
@@ -96,7 +96,7 @@ class TimetablePeriodGroup {
                 }
             }
         }
-        
+
         const style = `grid-column: ${this.day + 1} / ${this.day + 1}; grid-row: ${this.begin - 8 + 1} / ${this.end - 8 + 1}`;
         const cls = numCols > 3 ? "narrow" : "";
         return `<div class="timetable-entry-group ${cls}" style="${style}">${html}</div>`;
@@ -112,7 +112,7 @@ class TimetablePeriodGroup {
             skipEmpty: false
         });
     }
-    
+
     hintHtml() {
         return this._html({
             periodHTML: period => `
@@ -125,12 +125,12 @@ class TimetablePeriodGroup {
 
     static buildGroups(periods: Set<CoursePeriod>) {
         const groups: TimetablePeriodGroup[] = [];
-        
+
         for (let day = 0; day < NUM_DAYS; day++) {
             const periodsOnDay = [...periods]
                 .filter(p => p.time.day == day)
                 .sort((a, b) => a.time.begin - b.time.begin);
-    
+
             let currGroup = new TimetablePeriodGroup(day, FIRST_HOUR);
             for (const period of periodsOnDay) {
                 if (period.time.begin >= currGroup.end) {
@@ -165,7 +165,7 @@ export class TimetableView {
     public courses: Map<string, Course> = new Map();
     public selectedPeriods: Set<CoursePeriod> = new Set();
     public dragHints: Set<CoursePeriod> = new Set();
-    
+
     private timetableElement = document.getElementById("timetable") as HTMLElement;
 
     constructor() {
@@ -211,7 +211,7 @@ export class TimetableView {
             ${this.getTimetableHeaderHTML()}
             <div id="timetable-data">${this.getTimetableHTML()}</div>
         `;
-    } 
+    }
 }
 
 class DragHandler {
@@ -221,7 +221,7 @@ class DragHandler {
         width: number,
         height: number
     } | null = null;
-    
+
     dummyDragEl = document.getElementById("dummy-drag-el") as HTMLElement;
 
     constructor(parentApp: TimetableView) {
@@ -232,7 +232,7 @@ class DragHandler {
         document.addEventListener("mousedown", (ev => this.dragStart(ev)));
         document.addEventListener("touchstart", (ev => this.dragStart(ev)));
         document.addEventListener("dragstart", (ev => this.dragStart(ev)));
-        
+
         document.addEventListener("mousemove", (ev => this.dragUpdate(ev)));
 
         document.addEventListener("mouseup", (ev => this.dragEnd(ev)));
@@ -251,7 +251,7 @@ class DragHandler {
         }
         return { x: 0, y: 0 };
     }
-    
+
     dragStart(ev: MouseEvent | TouchEvent) {
         if (!(ev.target instanceof Element)) return;
 
@@ -261,7 +261,7 @@ class DragHandler {
             ev.preventDefault();
             const periodObj = [...this.parentView.selectedPeriods].find(p => p.uniqueID == closestID);
             if (!periodObj) return;
-            
+
             this.grabbedPeriod = {
                 period: periodObj,
                 width: closest.clientWidth,
@@ -285,9 +285,9 @@ class DragHandler {
             this.parentView.dragHints = dragHints;
 
             this.parentView.renderTimetable();
-            
+
             document.body.style.cursor = "grabbing";
-            
+
             // These must be added after any DOM change, or else touch event get lost
             // TODO: Remove these after drag has ended
             ev.target.addEventListener("touchmove", (ev => this.dragUpdate(ev as TouchEvent)));
@@ -295,7 +295,7 @@ class DragHandler {
             ev.target.addEventListener("touchcancel", (ev => this.dragEnd(ev as TouchEvent)));
         }
     }
-    
+
     dragUpdate(ev: MouseEvent | TouchEvent) {
         if (this.grabbedPeriod) {
             ev.preventDefault();
@@ -307,14 +307,14 @@ class DragHandler {
             // TODO: detect nearest element and highlight it
         }
     }
-    
+
     dragEnd(ev: MouseEvent | TouchEvent) {
         if (this.grabbedPeriod) {
             this.dummyDragEl.style.display = "none";
             document.body.style.cursor = "";
-            
+
             const pos = DragHandler.getPos(ev);
-    
+
             const els = document.elementsFromPoint(pos.x, pos.y).filter(e => e.classList.contains("timetable-drag-hint")) as [HTMLElement];
             if (els.length > 0) {
                 const closest = els[0].closest(".timetable-entry") as HTMLElement | null;
@@ -329,7 +329,7 @@ class DragHandler {
             } else {
                 this.parentView.selectedPeriods.add(this.grabbedPeriod.period);
             }
-            
+
             this.parentView.dragHints.clear();
             this.grabbedPeriod = null;
 
