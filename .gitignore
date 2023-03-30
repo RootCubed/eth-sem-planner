@@ -1,0 +1,4 @@
+node_modules/
+scrape_result/
+dist/
+coursedata.json

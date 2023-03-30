@@ -1,0 +1,210 @@
+:root {
+    --default-font: Arial, sans-serif;
+    --font: var(--default-font);
+    --bg-primary: #333;
+    --bg-secondary: #444;
+    --color-primary: #fff;
+    --class-lesson-bg: #ddd;
+    --class-no-lesson-bg: #888;
+    --class-lecture: #bdd7ee;
+    --class-exercise: #c6e0b4;
+    --class-seminar: #f8cbad;
+    --link-color: #a8cdff;
+}
+
+* {
+    margin: 0;
+    font-family: var(--font);
+    box-sizing: border-box;
+}
+
+html, body {
+    background-color: var(--bg-secondary);
+    height: -webkit-fill-available;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+a {
+    color: var(--link-color);
+}
+
+body {
+    display: grid;
+    grid-template-rows: 60px 1fr;
+    height: 100vh;
+}
+
+#menu-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-primary);
+    color: var(--color-primary);
+}
+
+#panels {
+    display: flex;
+    width: 200%;
+    overflow: hidden;
+}
+
+#panels.scroll-to-timetable {
+    margin-left: -100%;
+}
+
+#panels > div {
+    width: 100%;
+    overflow: auto;
+}
+
+/* --------- */
+/* Timetable */
+/* --------- */
+
+#timetable {
+    display: grid;
+    height: 100%;
+    text-align: center;
+    grid-template-columns: 50px repeat(5, 1fr);
+    grid-template-rows: 40px repeat(13, 1fr);
+}
+
+#timetable-data {
+    grid-row: 2 / 15;
+    grid-column: 2 / 7;
+    display: grid;
+    grid-gap: 2px;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(13, 1fr);
+}
+
+.timetable-entry-group {
+    display: inline-grid;
+    grid-gap: 2px;
+}
+
+.timetable-entry {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.timetable-entry-group.narrow .timetable-entry span {
+    transform: rotate(-90deg);
+    width: 200px;
+}
+
+.timetable-drag-hint {
+    background-color: #55dc55e7 !important;
+    border: 3px dashed #15ae31;
+}
+
+.timetable-drag-hint.selected {
+    background-color: #21760fe7 !important;
+    border: 3px dashed #053d0f;
+}
+
+.timetable-entry:not(.entry-empty) {
+    background-color: var(--class-lesson-bg);
+    color: var(--color-secondary);
+}
+
+.entry-empty {
+    background-color: var(--class-no-lesson-bg);
+}
+
+.timetable-entry.V {
+    background-color: var(--class-lecture);
+}
+
+.timetable-entry.U {
+    background-color: var(--class-exercise);
+    cursor: grab;
+}
+
+.timetable-entry.S {
+    background-color: var(--class-seminar);
+}
+
+.timetable-date {
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.timetable-time {
+    color: var(--color-primary);
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: -10px;
+}
+
+span.entry-title {
+    font-weight: bold;
+    text-decoration: none !important;
+    display: block;
+}
+
+#dummy-drag-el {
+    position: absolute;
+    pointer-events: none;
+    display: grid;
+}
+
+/* ------------- */
+/* Course picker */
+/* ------------- */
+
+.course-overview {
+    display: block;
+    background-color: white;
+    padding: 10px;
+    margin: 10px;
+}
+.course-overview-header {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+/* ------------- */
+/* Media queries */
+/* ------------- */
+
+@media print {
+    * {
+        color: black !important;
+    }
+    
+    body, #selection {
+        background-color: white;
+    }
+
+    #menu-bar {
+        background: none;
+    }
+
+    .timetable-entry {
+        border: 1px solid black;
+        box-shadow: inset 0 0 0 1000px #ddd;
+    }
+
+    .entry-empty {
+        box-shadow: none;
+        background: none;
+    }
+
+    #panels {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    #panel-course-picker {
+        display: none;
+    }
+}
