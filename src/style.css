@@ -14,14 +14,13 @@
 
 * {
     margin: 0;
+    padding: 0;
     font-family: var(--font);
     box-sizing: border-box;
 }
 
 html, body {
     background-color: var(--bg-secondary);
-    height: -webkit-fill-available;
-    padding-bottom: env(safe-area-inset-bottom);
 }
 
 a {
@@ -32,6 +31,8 @@ body {
     display: grid;
     grid-template-rows: 60px 1fr;
     height: 100vh;
+    height: -webkit-fill-available;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 #menu-bar {
