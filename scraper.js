@@ -1,6 +1,20 @@
 import { JSDOM } from "jsdom";
 import * as fs from "fs";
 
+/*
+// English
+const DAY_LOOKUP = {
+    "Mon": "Monday",
+    "Tue": "Tuesday",
+    "Wed": "Wednesday",
+    "Thu": "Thursday",
+    "Fri": "Friday"
+};
+const DEGREE_NAME = "Computer Science Bachelor";
+const PAGE_REGEX = /Page 1 of (\d+)/;
+const CREDITS_REGEX = /<td>\d+ credits<\/td>/g;
+*/
+// German
 const DAY_LOOKUP = {
     "Mo": "Monday",
     "Di": "Tuesday",
@@ -8,17 +22,26 @@ const DAY_LOOKUP = {
     "Do": "Thursday",
     "Fr": "Friday"
 };
+const DEGREE_NAME = "Informatik Bachelor";
+const PAGE_REGEX = /Seite 1 von (\d+)/;
+const CREDITS_REGEX = /<td>\d+ KP<\/td>/g;
+
+const CONFIG = {
+    lang: "de",
+    studyDirID: 102579,
+    sem: "2023S"
+};
 
 function extractData(document) {
     const title = document.getElementById("contentTop").textContent.replace("\n", "");
     const courseID = title.split(/ +/)[0];
     const courseName = title.split(/ +/).slice(1).join(" ");
 
-    const courseTable = [...document.querySelectorAll(".inside > table")[1].querySelector("tbody").children].slice(1);
+    const hoursTable = [...document.querySelectorAll(".inside > table")[1].querySelector("tbody").children].slice(1);
 
     let hours = {};
 
-    for (const row of courseTable) {
+    for (const row of hoursTable) {
         const courseType = row.querySelectorAll("td")[0].textContent.split(" ")[1];
         const numHours = parseInt(row.querySelectorAll("td")[2].textContent);
         const table = row.querySelectorAll("td")[3];
@@ -47,54 +70,90 @@ function extractData(document) {
             hours: data
         };
     }
+
+    const performanceTable = document.querySelectorAll(".inside > table")[3].querySelector("tbody");
+    const ectsList = performanceTable.innerHTML.match(CREDITS_REGEX);
+    if (ectsList.length > 1) {
+        console.warn("Course specifies multiple ECTS credit amounts! Please manually check this course:", courseID, courseName);
+    }
+    const ectsCredits = parseInt(ectsList[0].match(/\d+/g));
+
+    let assignmentOptions = [];
+
+    const offeredInTable = [...document.querySelectorAll(".inside > table")[7].querySelector("tbody").children].slice(1);
+    for (const row of offeredInTable) {
+        const programName = row.querySelectorAll("td")[0].textContent;
+        const sectionName = row.querySelectorAll("td")[1].textContent;
+        if (programName == DEGREE_NAME) {
+            assignmentOptions.push(sectionName);
+        }
+        if (programName == "Wissenschaft im Kontext (Science in Perspective)" && sectionName == "D-INFK") {
+            assignmentOptions.push("GESS");
+        }
+    }
+
     return {
         name: courseName,
         id: courseID,
+        ectsCredits: ectsCredits,
+        assignmentOptions: assignmentOptions,
         hours: hours
     };
 }
 
-/*
+const getCourseListLink = (page, sem, studydir, lang) => `https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/sucheLehrangebot.view?lerneinheitscode=&deptId=&famname=&unterbereichAbschnittId=&seite=${page}&lerneinheitstitel=&rufname=&kpRange=0,999&lehrsprache=&bereichAbschnittId=&semkez=${sem}&studiengangAbschnittId=${studydir}&studiengangTyp=&ansicht=1&lang=${lang}&katalogdaten=&wahlinfo=`;
+const getLink = (sem, lid, lang) => `https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/lerneinheit.view?semkez=${sem}&ansicht=ALLE&lerneinheitId=${lid}&lang=${lang}`;
 
-const MAIN_REQ_URL = "https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/sucheLehrangebot.view?lang=de&search=on&semkez=2023S&studiengangTyp=&deptId=&studiengangAbschnittId=102579&bereichAbschnittId=&lerneinheitstitel=&lerneinheitscode=&famname=&rufname=&wahlinfo=&lehrsprache=&periodizitaet=&kpRange=0%2C999&katalogdaten=&_strukturAus=on&search=Suchen";
-
-async function main() {
-    let getURL = page => `https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/sucheLehrangebot.view?lerneinheitscode=&deptId=&famname=&unterbereichAbschnittId=&seite=${page}&lerneinheitstitel=&rufname=&kpRange=0,999&lehrsprache=&bereichAbschnittId=&semkez=2023S&studiengangAbschnittId=102579&studiengangTyp=&ansicht=1&lang=de&katalogdaten=&wahlinfo=`;
-    let i = 0;
-    for (let page = 1; page <= 3; page++) {
-        let fReq = await fetch(getURL(page));
+async function downloadCourses(config) {
+    let endPage;
+    let currPage = 1;
+    do {
+        let fReq = await fetch(getCourseListLink(currPage, config.sem, config.studyDirID, config.lang));
         let html = await fReq.text();
+        if (!endPage) {
+            endPage = parseInt(html.replace(/\s+/g, " ").match(PAGE_REGEX)[1]);
+            if (!(endPage >= 1 && endPage <= 100)) {
+                console.error("Invalid endPage:", endPage);
+                process.exit();
+            }
+        }
         let dom = new JSDOM(html);
         let courseRows = Array.from(dom.window.document.querySelectorAll("table tr")).filter(e => e.children.length == 6 && e.children[0].nodeName == "TD");
         for (const r of courseRows) {
             const link = r.querySelector("a").href;
             let lid = link.match(/lerneinheitId=(\d+)/)[1];
-            let unitReq = await fetch(`https://www.vorlesungen.ethz.ch${link}`);
+            let unitReq = await fetch(getLink(config.sem, lid, config.lang));
             let unitHTML = await unitReq.text();
-            console.log(`https://www.vorlesungen.ethz.ch${link}`);
-            console.log(unitReq.status);
+            console.log(lid, "returned", unitReq.status);
             await new Promise(resolve => setTimeout(resolve, 1000));
             fs.writeFileSync(`scrape_result/${lid}.html`, unitHTML);
-            console.log(`Course #${i++} downloaded.`);
         }
-        console.log("Going to page " + (page + 1));
+        currPage++;
+        console.log("Going to page", currPage);
+    } while (currPage <= endPage);
+}
+
+async function main(config) {
+    if (!fs.existsSync("scrape_result")) {
+        fs.mkdirSync("scrape_result");
     }
+    await downloadCourses(config);
+
+    let dataset = {};
+
+    for (const file of fs.readdirSync("scrape_result")) {
+        const html = fs.readFileSync(`scrape_result/${file}`, "utf-8");
+        const dom = new JSDOM(html.replace(/&nbsp;/g, " ").replace(/\u00a0/g, ""));
+        const data = extractData(dom.window.document);
+        dataset[data.id] = {
+            name: data.name,
+            hours: data.hours,
+            ectsCredits: data.ectsCredits,
+            assignmentOptions: data.assignmentOptions,
+        };
+    }
+
+    fs.writeFileSync("coursedata.json", JSON.stringify(dataset));
 }
-main();
 
-*/
-
-let dataset = {};
-
-for (const file of fs.readdirSync("scrape_result")) {
-    const html = fs.readFileSync(`scrape_result/${file}`, "utf-8");
-    const dom = new JSDOM(html.replace(/&nbsp;/g, " ").replace(/\u00a0/g, ""));
-    const data = extractData(dom.window.document);
-    dataset[data.id] = {
-        name: data.name,
-        hours: data.hours
-    };
-    console.log(file, data.id, data.name);
-}
-
-fs.writeFileSync("coursedata.json", JSON.stringify(dataset));
+main(CONFIG);
