@@ -64,25 +64,39 @@ export class CoursePeriod {
 export class Course {
     courseID: string;
     courseName: string;
+    ectsCredits: number;
+    assignmentOptions: string[];
     periods: Map<CoursePeriodType, CoursePeriod[]>;
     hoursForPeriodType: Map<CoursePeriodType, number>;
 
-    constructor(courseID: string, courseName: string, periods: Map<CoursePeriodType, CoursePeriod[]>, hoursForPeriodType: Map<CoursePeriodType, number>) {
+    constructor(
+        courseID: string, courseName: string, ectsCredits: number,
+        assignmentOptions: string[],
+        periods: Map<CoursePeriodType, CoursePeriod[]>,
+        hoursForPeriodType: Map<CoursePeriodType, number>) {
         this.courseID = courseID;
         this.courseName = courseName;
+        this.ectsCredits = ectsCredits;
+        this.assignmentOptions = assignmentOptions;
         this.periods = periods;
         this.hoursForPeriodType = hoursForPeriodType;
     }
 
     overviewHTML() {
-        let html = `<div class="course-overview" data-id="${this.courseID}">`;
-        html += `<div class="course-overview-header">${this.courseName}</div>`;
-        html += "<div class=\"course-overview-body\">";
+        let hourCountHTML = "";
         for (const [type, ] of this.periods) {
-            html += `<div class="course-overview-period-type">${this.hoursForPeriodType.get(type)}${type}</div>`;
+            hourCountHTML += `<span class="${type}">${this.hoursForPeriodType.get(type) + type}</span>`;
         }
-        html += "</div></div>";
-        return html;
+        return `<div class="course-overview" data-id="${this.courseID}">
+            <div class="course-overview-content">
+                <span class="course-overview-header">${this.courseName}</span>
+                <span class="course-overview-etcs">${this.ectsCredits} ECTS</span>
+                <div class="course-overview-hour-count">${hourCountHTML}</div>
+            </div>
+            <div class="course-overview-btns">
+                <button class="course-overview-remove">remove</button>
+            </div>
+        </div>`;
     }
 }
 
@@ -90,6 +104,8 @@ export class Course {
 export interface CourseData {
     [key: string]: {
         name: string,
+        ectsCredits: number,
+        assignmentOptions: string[]
         hours: {
             [key in CoursePeriodType]: {
                 hourCount: number, hours: {

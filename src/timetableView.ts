@@ -1,6 +1,7 @@
+import { Application } from "./app";
 import {
     DAYS, HOURS, NUM_DAYS, FIRST_HOUR, LAST_HOUR,
-    CoursePeriodTime, CoursePeriod, Course
+    CoursePeriodTime, CoursePeriod
 } from "./courseInfo";
 
 interface HTMLOutputConfig {
@@ -162,13 +163,14 @@ class TimetablePeriodGroup {
 }
 
 export class TimetableView {
-    public courses: Map<string, Course> = new Map();
+    private parentApp: Application;
     public selectedPeriods: Set<CoursePeriod> = new Set();
     public dragHints: Set<CoursePeriod> = new Set();
 
     private timetableElement = document.getElementById("timetable") as HTMLElement;
 
-    constructor() {
+    constructor(parentApp: Application) {
+        this.parentApp = parentApp;
         const dh = new DragHandler(this);
         dh.init();
     }
@@ -211,6 +213,10 @@ export class TimetableView {
             ${this.getTimetableHeaderHTML()}
             <div id="timetable-data">${this.getTimetableHTML()}</div>
         `;
+    }
+
+    get courses() {
+        return this.parentApp.courses;
     }
 }
 

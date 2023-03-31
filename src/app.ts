@@ -3,20 +3,32 @@ import { CoursePickerView } from "./coursePickerView";
 import { Course, CoursePeriod, CoursePeriodTime } from "./courseInfo";
 import type { CourseData, CoursePeriodType } from "./courseInfo";
 
-class Application {
+export class Application {
     public courses: Map<string, Course> = new Map();
 
-    public timetable: TimetableView = new TimetableView();
-    public coursePickerView: CoursePickerView = new CoursePickerView();
+    public timetable: TimetableView;
+    public coursePickerView: CoursePickerView;
+
+    constructor() {
+        this.timetable = new TimetableView(this);
+        this.coursePickerView = new CoursePickerView(this);
+    }
 
     parseCourses(resourceObject: CourseData) {
         this.courses.clear();
         for (const courseID in resourceObject) {
             const courseName = resourceObject[courseID].name;
+            const courseCredits = resourceObject[courseID].ectsCredits;
+            const courseAssignmentOptions = resourceObject[courseID].assignmentOptions;
+
             const courseHours: Map<CoursePeriodType, CoursePeriod[]> = new Map();
             const courseHoursReq: Map<CoursePeriodType, number> = new Map();
-            const course = new Course(courseID, courseName, courseHours, courseHoursReq);
-            this.courses.set(courseID, course);
+
+            const course = new Course(
+                courseID, courseName, courseCredits,
+                courseAssignmentOptions, courseHours, courseHoursReq
+            );
+
             for (const _hourType in resourceObject[courseID].hours) {
                 const hourType = _hourType as CoursePeriodType;
 
@@ -29,9 +41,9 @@ class Application {
                 });
                 courseHours.set(hourType, periods);
             }
+
+            this.courses.set(courseID, course);
         }
-        this.timetable.courses = this.courses;
-        this.coursePickerView.courses = this.courses;
     }
 
     render() {
@@ -67,4 +79,9 @@ fetch("/resources/FS23").then(res => res.json()).then((courseData: CourseData) =
 
     app.timetable.selectedPeriods = courseSelection;
     app.render();
+});
+
+document.getElementById("timetable-edit-courses")?.addEventListener("click", () => {
+    document.getElementById("timetable")?.classList.toggle("backside");
+    document.getElementById("course-picker-cont")?.classList.toggle("backside");
 });

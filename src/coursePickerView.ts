@@ -1,14 +1,24 @@
-import { Course } from "./courseInfo";
+import type { Application } from "./app";
+import type { Course } from "./courseInfo";
 
 export class CoursePickerView {
-    public courses: Map<string, Course> = new Map();
-    private coursePicker = document.getElementById("panel-course-picker") as HTMLElement;
+    private parentApp: Application;
+    private coursePicker = document.getElementById("course-picker-course-list") as HTMLElement;
+
+    constructor(parentApp: Application) {
+        this.parentApp = parentApp;
+    }
 
     renderCoursePicker() {
         let html = "";
-        for (const [, course] of this.courses) {
+        const selectedCourses: Set<Course> = new Set();
+        for (const period of this.parentApp.timetable.selectedPeriods) {
+            selectedCourses.add(period.parentCourse);
+        }
+        for (const course of selectedCourses) {
             html += course.overviewHTML();
         }
+        html += "<button class=\"course-overview add-course\">Add course</button>";
         this.coursePicker.innerHTML = html;
     }
 }

@@ -4,6 +4,7 @@
     --bg-primary: #333;
     --bg-secondary: #444;
     --color-primary: #fff;
+    --color-secondary: #000;
     --class-lesson-bg: #ddd;
     --class-no-lesson-bg: #888;
     --class-lecture: #bdd7ee;
@@ -32,7 +33,7 @@ body {
     grid-template-rows: 60px 1fr;
     height: 100vh;
     height: -webkit-fill-available;
-    padding-bottom: env(safe-area-inset-bottom);
+    overflow: hidden;
 }
 
 #menu-bar {
@@ -58,16 +59,48 @@ body {
     overflow: auto;
 }
 
+/* ------- */
+/* General */
+/* ------- */
+
+button {
+    background-color: #ddd;
+    color: var(--color-secondary);
+    padding: 12px;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.V {
+    background-color: var(--class-lecture);
+}
+
+.U {
+    background-color: var(--class-exercise);
+}
+
+.S {
+    background-color: var(--class-seminar);
+}
+
 /* --------- */
 /* Timetable */
 /* --------- */
 
-#timetable {
+#panel-timetable {
     display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+}
+
+#timetable {
     height: 100%;
+    display: grid;
     text-align: center;
     grid-template-columns: 50px repeat(5, 1fr);
     grid-template-rows: 40px repeat(13, 1fr);
+    backface-visibility: hidden;
+    transition: transform 1s;
 }
 
 #timetable-data {
@@ -93,6 +126,7 @@ body {
     user-select: none;
     border-radius: 10px;
     text-align: center;
+    color: var(--color-secondary);
 }
 
 .timetable-entry-group.narrow .timetable-entry span {
@@ -110,26 +144,12 @@ body {
     border: 3px dashed #053d0f;
 }
 
-.timetable-entry:not(.entry-empty) {
-    background-color: var(--class-lesson-bg);
-    color: var(--color-secondary);
-}
-
 .entry-empty {
     background-color: var(--class-no-lesson-bg);
 }
 
-.timetable-entry.V {
-    background-color: var(--class-lecture);
-}
-
 .timetable-entry.U {
-    background-color: var(--class-exercise);
     cursor: grab;
-}
-
-.timetable-entry.S {
-    background-color: var(--class-seminar);
 }
 
 .timetable-date {
@@ -162,20 +182,95 @@ span.entry-title {
 /* Course picker */
 /* ------------- */
 
-.course-overview {
-    display: block;
-    background-color: white;
-    padding: 10px;
-    margin: 10px;
+#course-picker-cont {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    padding: 0 50px;
+    color: white;
+    backface-visibility: hidden;
+    transition: transform 1s;
 }
+
+#timetable-edit-courses {
+    width: 100%;
+}
+
+.flip-container {
+    position: relative;
+}
+
+.backside {
+    transform: rotate3d(0, 1, 0, 180deg);
+}
+
+.course-overview {
+    display: flex;
+    background-color: var(--class-lesson-bg);
+    color: var(--color-secondary);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 10px 0;
+    justify-content: space-between;
+}
+
+.course-overview-content {
+    padding: 10px;
+}
+
 .course-overview-header {
+    display: block;
     font-size: 20px;
     font-weight: bold;
+}
+
+.course-overview-btns {
+    display: flex;
+}
+
+.course-overview-remove {
+    display: flex;
+    align-items: center;
+    color: white;
+    background-color: #e83a27;
+}
+
+.course-overview-course-type {
+    display: inline-block;
+    border-radius: 10px;
+    background-color: #222;
+    color: white;
+    padding: 5px;
+}
+
+.course-overview-hour-count span {
+    display: inline-block;
+    padding: 5px;
+    margin-right: 5px;
+}
+
+.course-overview.add-course {
+    display: block;
+    width: 100%;
+    background-color: #56c556c2;
+    color: white;
 }
 
 /* ------------- */
 /* Media queries */
 /* ------------- */
+
+@media only screen and (min-width: 800px) {
+    #course-picker-course-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        align-items: center;
+        grid-gap: 10px;
+    }
+}
 
 @media print {
     * {
@@ -184,6 +279,10 @@ span.entry-title {
     
     body, #selection {
         background-color: white;
+    }
+    
+    #timetable-menu-bar {
+        display: none;
     }
 
     #menu-bar {
