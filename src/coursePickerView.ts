@@ -18,7 +18,6 @@ export class CoursePickerView {
         for (const course of selectedCourses) {
             html += course.overviewHTML();
         }
-        html += "<button class=\"course-overview add-course\">Add course</button>";
         this.coursePicker.innerHTML = html;
     }
 }
