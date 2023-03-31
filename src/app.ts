@@ -81,7 +81,15 @@ fetch("/resources/FS23").then(res => res.json()).then((courseData: CourseData) =
     app.render();
 });
 
-document.getElementById("timetable-edit-courses")?.addEventListener("click", () => {
-    document.getElementById("timetable")?.classList.toggle("backside");
-    document.getElementById("course-picker-cont")?.classList.toggle("backside");
-});
+const editCourseBtn = document.getElementById("timetable-edit-courses");
+if (editCourseBtn) {
+    editCourseBtn.addEventListener("click", () => {
+        document.getElementById("timetable")?.classList.toggle("backside");
+        document.getElementById("course-picker-cont")?.classList.toggle("backside");
+        if (editCourseBtn.innerText == "Add/remove courses") {
+            editCourseBtn.innerText = "Back to timetable";
+        } else {
+            editCourseBtn.innerText = "Add/remove courses";
+        }
+    });
+}
