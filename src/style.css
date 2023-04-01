@@ -271,6 +271,7 @@ span.entry-title {
     color: white;
     background-color: var(--bg-add);
     min-width: 80px;
+    font-size: 40px;
 }
 
 .course-overview-course-type {
@@ -306,8 +307,10 @@ span.entry-title {
     left: 0;
     width: 100%;
     height: 100%;
-    padding: 50px;
-    backdrop-filter: blur(2px);
+    padding: 100px;
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    background-color: #0008;
 }
 
 #course-picker-search-cont {
@@ -315,7 +318,7 @@ span.entry-title {
     flex-direction: column;
     align-items: center;
     height: 100%;
-    background-color: #222e;
+    background-color: #444e;
     padding: 20px;
 }
 

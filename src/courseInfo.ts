@@ -91,7 +91,7 @@ export class Course {
         }
         let buttonsHTML = "";
         if (addButton) {
-            buttonsHTML += "<button class=\"course-overview-add\">add</button>";
+            buttonsHTML += "<button class=\"course-overview-add\">+</button>";
         }
         if (deleteButton) {
             buttonsHTML += "<button class=\"course-overview-remove\">remove</button>";
