@@ -263,7 +263,7 @@ class DragHandler {
 
         const closest = ev.target.closest(".timetable-entry") as HTMLElement | null;
         const closestID = closest?.dataset.id;
-        if (closest && closestID) {
+        if (closest && closest.classList.contains("U") && closestID) {
             ev.preventDefault();
             const periodObj = [...this.parentView.selectedPeriods].find(p => p.uniqueID == closestID);
             if (!periodObj) return;
@@ -287,7 +287,6 @@ class DragHandler {
             const courseForGrabbedPeriod = this.parentView.courses.get(periodObj.parentCourse.courseID);
             const courseExercisePeriods = courseForGrabbedPeriod?.periods.get(periodObj.type);
             const dragHints: Set<CoursePeriod> = new Set(courseExercisePeriods);
-            console.log(dragHints);
             this.parentView.dragHints = dragHints;
 
             this.parentView.renderTimetable();
@@ -306,7 +305,6 @@ class DragHandler {
         if (this.grabbedPeriod) {
             ev.preventDefault();
             const pos = DragHandler.getPos(ev);
-            console.log(pos);
             this.dummyDragEl.style.left = (pos.x - this.grabbedPeriod.width / 2) + "px";
             this.dummyDragEl.style.top = (pos.y - this.grabbedPeriod.height / 2) + "px";
 
@@ -326,7 +324,6 @@ class DragHandler {
                 const closest = els[0].closest(".timetable-entry") as HTMLElement | null;
                 const closestID = closest?.dataset.id;
                 const periodObj = [...this.parentView.dragHints].find(p => p.uniqueID == closestID);
-                console.log(closest, closestID, periodObj);
                 if (periodObj != undefined) {
                     this.parentView.selectedPeriods.add(periodObj);
                 } else {
