@@ -19,13 +19,14 @@ export class Application {
         for (const courseID in resourceObject) {
             const courseName = resourceObject[courseID].name;
             const courseCredits = resourceObject[courseID].ectsCredits;
+            const courseVvzLink = resourceObject[courseID].vvzLink;
             const courseAssignmentOptions = resourceObject[courseID].assignmentOptions;
 
             const courseHours: Map<CoursePeriodType, CoursePeriod[]> = new Map();
             const courseHoursReq: Map<CoursePeriodType, number> = new Map();
 
             const course = new Course(
-                courseID, courseName, courseCredits,
+                courseID, courseName, courseCredits, courseVvzLink,
                 courseAssignmentOptions, courseHours, courseHoursReq
             );
 

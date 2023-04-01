@@ -65,37 +65,46 @@ export class Course {
     courseID: string;
     courseName: string;
     ectsCredits: number;
+    vvzLink: string;
     assignmentOptions: string[];
     periods: Map<CoursePeriodType, CoursePeriod[]>;
     hoursForPeriodType: Map<CoursePeriodType, number>;
 
     constructor(
-        courseID: string, courseName: string, ectsCredits: number,
+        courseID: string, courseName: string, ectsCredits: number, vvzLink: string,
         assignmentOptions: string[],
         periods: Map<CoursePeriodType, CoursePeriod[]>,
         hoursForPeriodType: Map<CoursePeriodType, number>) {
         this.courseID = courseID;
         this.courseName = courseName;
         this.ectsCredits = ectsCredits;
+        this.vvzLink = vvzLink;
         this.assignmentOptions = assignmentOptions;
         this.periods = periods;
         this.hoursForPeriodType = hoursForPeriodType;
     }
 
-    overviewHTML() {
+    overviewHTML(deleteButton: boolean, addButton: boolean) {
         let hourCountHTML = "";
         for (const [type, ] of this.periods) {
             hourCountHTML += `<span class="${type}">${this.hoursForPeriodType.get(type) + type}</span>`;
+        }
+        let buttonsHTML = "";
+        if (addButton) {
+            buttonsHTML += "<button class=\"course-overview-add\">add</button>";
+        }
+        if (deleteButton) {
+            buttonsHTML += "<button class=\"course-overview-remove\">remove</button>";
         }
         return `<div class="course-overview" data-id="${this.courseID}">
             <div class="course-overview-content">
                 <span class="course-overview-header">${this.courseName}</span>
                 <span class="course-overview-etcs">${this.ectsCredits} ECTS</span>
                 <div class="course-overview-hour-count">${hourCountHTML}</div>
+                <a href="${this.vvzLink}" target="_blank" class="course-overview-link">→ VVZ</a>
+                <a href="https://n.ethz.ch/~lteufelbe/coursereview/course/${this.courseID}/" target="_blank" class="course-overview-link">&#x2192; CourseReview</a>
             </div>
-            <div class="course-overview-btns">
-                <button class="course-overview-remove">remove</button>
-            </div>
+            <div class="course-overview-btns">${buttonsHTML}</div>
         </div>`;
     }
 }
@@ -105,7 +114,8 @@ export interface CourseData {
     [key: string]: {
         name: string,
         ectsCredits: number,
-        assignmentOptions: string[]
+        assignmentOptions: string[],
+        vvzLink: string,
         hours: {
             [key in CoursePeriodType]: {
                 hourCount: number, hours: {

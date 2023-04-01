@@ -92,10 +92,14 @@ function extractData(document) {
         }
     }
 
+    const englLink = document.getElementsByClassName("engl")[0];
+    const vvzLink = "https://www.vorlesungen.ethz.ch" + englLink.href;
+
     return {
         name: courseName,
         id: courseID,
         ectsCredits: ectsCredits,
+        vvzLink: vvzLink,
         assignmentOptions: assignmentOptions,
         hours: hours
     };
@@ -145,12 +149,8 @@ async function main(config) {
         const html = fs.readFileSync(`scrape_result/${file}`, "utf-8");
         const dom = new JSDOM(html.replace(/&nbsp;/g, " ").replace(/\u00a0/g, ""));
         const data = extractData(dom.window.document);
-        dataset[data.id] = {
-            name: data.name,
-            hours: data.hours,
-            ectsCredits: data.ectsCredits,
-            assignmentOptions: data.assignmentOptions,
-        };
+        dataset[data.id] = data;
+        delete dataset[data.id].id;
     }
 
     fs.writeFileSync("coursedata.json", JSON.stringify(dataset));

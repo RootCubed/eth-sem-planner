@@ -3,6 +3,8 @@
     --font: var(--default-font);
     --bg-primary: #333;
     --bg-secondary: #444;
+    --bg-add: #47ba47;
+    --bg-remove: #e83a27;
     --color-primary: #fff;
     --color-secondary: #000;
     --class-lesson-bg: #ddd;
@@ -10,6 +12,9 @@
     --class-lecture: #bdd7ee;
     --class-exercise: #c6e0b4;
     --class-seminar: #f8cbad;
+    --class-lec-ex: #a1e4c5;
+    --class-practical: #e7a2af;
+    --class-independent-work: #e9c8a4;
     --link-color: #a8cdff;
 }
 
@@ -63,13 +68,20 @@ body {
 /* General */
 /* ------- */
 
-button {
+button, input[type=text] {
     background-color: #ddd;
     color: var(--color-secondary);
     padding: 12px;
     border: none;
     font-size: 18px;
+}
+
+button {
     cursor: pointer;
+}
+
+.hidden {
+    display: none;
 }
 
 .V {
@@ -82,6 +94,18 @@ button {
 
 .S {
     background-color: var(--class-seminar);
+}
+
+.G {
+    background-color: var(--class-lec-ex);
+}
+
+.P {
+    background-color: var(--class-practical);
+}
+
+.A {
+    background-color: var(--class-independent-work);
 }
 
 /* --------- */
@@ -101,6 +125,11 @@ button {
     grid-template-rows: 40px repeat(13, 1fr);
     backface-visibility: hidden;
     transition: transform 1s;
+}
+
+
+#timetable.backside {
+    transform: perspective(800px) rotate3d(0, 1, 0, -180deg);
 }
 
 #timetable-data {
@@ -195,16 +224,16 @@ span.entry-title {
     transition: transform 1s;
 }
 
+#course-picker-cont.backside {
+    transform: perspective(800px) rotate3d(0, 1, 0, 180deg);
+}
+
 #timetable-edit-courses {
     width: 100%;
 }
 
 .flip-container {
     position: relative;
-}
-
-.backside {
-    transform: rotate3d(0, 1, 0, 180deg);
 }
 
 .course-overview {
@@ -235,7 +264,13 @@ span.entry-title {
     display: flex;
     align-items: center;
     color: white;
-    background-color: #e83a27;
+    background-color: var(--bg-remove);
+}
+
+.course-overview-add {
+    color: white;
+    background-color: var(--bg-add);
+    min-width: 80px;
 }
 
 .course-overview-course-type {
@@ -252,11 +287,45 @@ span.entry-title {
     margin-right: 5px;
 }
 
-.course-overview.add-course {
+#course-overview-add-course {
     display: block;
     width: 100%;
-    background-color: #56c556c2;
+    background-color: var(--bg-add);
     color: white;
+}
+
+.course-overview-link {
+    display: inline-block;
+    margin-right: 10px;
+    color: #2a2de5;
+}
+
+#overlay-course-picker-search {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 50px;
+    backdrop-filter: blur(2px);
+}
+
+#course-picker-search-cont {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    background-color: #222e;
+    padding: 20px;
+}
+
+#course-picker-search-input {
+    width: 100%;
+}
+
+#course-picker-search-list {
+    overflow: auto;
+    margin-top: 10px;
 }
 
 /* ------------- */
