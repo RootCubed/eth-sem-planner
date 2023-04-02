@@ -99,10 +99,14 @@ export class Course {
         return `<div class="course-overview" data-id="${this.courseID}">
             <div class="course-overview-content">
                 <span class="course-overview-header">${this.courseName}</span>
-                <span class="course-overview-etcs">${this.ectsCredits} ECTS</span>
-                <div class="course-overview-hour-count">${hourCountHTML}</div>
-                <a href="${this.vvzLink}" target="_blank" class="course-overview-link">→ VVZ</a>
-                <a href="https://n.ethz.ch/~lteufelbe/coursereview/course/${this.courseID}/" target="_blank" class="course-overview-link">&#x2192; CourseReview</a>
+                <div class="course-overview-main">
+                    <span class="course-overview-etcs">${this.ectsCredits} ECTS</span>
+                    <div class="course-overview-hour-count">${hourCountHTML}</div>
+                    <div>
+                        <a href="${this.vvzLink}" target="_blank" class="course-overview-link">→ VVZ</a>
+                        <a href="https://n.ethz.ch/~lteufelbe/coursereview/course/${this.courseID}/" target="_blank" class="course-overview-link">&#x2192; CourseReview</a>
+                    </div>
+                </div>
             </div>
             <div class="course-overview-btns">${buttonsHTML}</div>
         </div>`;

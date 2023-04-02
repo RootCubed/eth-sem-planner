@@ -1,5 +1,6 @@
 import { TimetableView } from "./timetableView";
 import { CoursePickerView } from "./coursePickerView";
+import { CourseSearchView } from "./courseSearchView";
 import { Course, CoursePeriod, CoursePeriodTime } from "./courseInfo";
 import type { CourseData, CoursePeriodType } from "./courseInfo";
 
@@ -8,10 +9,14 @@ export class Application {
 
     public timetable: TimetableView;
     public coursePickerView: CoursePickerView;
+    public courseSearchView: CourseSearchView;
 
     constructor() {
         this.timetable = new TimetableView(this);
-        this.coursePickerView = new CoursePickerView(this);
+        const coursePickerEl = document.getElementById("course-picker-course-list");
+        const courseSearchEl = document.getElementById("overlay-course-picker-search");
+        this.coursePickerView = new CoursePickerView(this, coursePickerEl as HTMLElement);
+        this.courseSearchView = new CourseSearchView(this, courseSearchEl as HTMLElement);
     }
 
     parseCourses(resourceObject: CourseData) {
@@ -47,9 +52,28 @@ export class Application {
         }
     }
 
+    addCourse(courseID: string) {
+        const courseObject = this.courses.get(courseID);
+        if (!courseObject) return;
+        for (const [type, periods] of courseObject.periods) {
+            if (type == "U") {
+                this.timetable.selectedPeriods.add(periods[0]);
+            } else {
+                const addedTimes = new Set();
+                for (const p of periods) {
+                    if (addedTimes.has(p.time.timeString)) continue;
+                    this.timetable.selectedPeriods.add(p);
+                    addedTimes.add(p.time.timeString);
+                }
+            }
+        }
+        this.render();
+    }
+
     render() {
         this.timetable.renderTimetable();
         this.coursePickerView.renderCoursePicker();
+        this.courseSearchView.renderSearchView();
     }
 }
 

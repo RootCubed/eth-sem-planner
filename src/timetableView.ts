@@ -107,7 +107,11 @@ class TimetablePeriodGroup {
         return this._html({
             periodHTML: period => `
             <span class="entry-title">${period.parentCourse.courseName}</span>
-            <span class="entry-room">${period.room}</span>
+            <span class="entry-room">${period.room}
+            <svg width="15" height="15" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-width="2" d="m1,5 l6,8 l6,-8" stroke="#000" fill="none"/>
+            </svg>
+            </span>
             `,
             periodClass: "timetable-entry",
             skipEmpty: false
@@ -259,6 +263,7 @@ class DragHandler {
     }
 
     dragStart(ev: MouseEvent | TouchEvent) {
+        if (ev instanceof MouseEvent && ev.button != 0) return;
         if (!(ev.target instanceof Element)) return;
 
         const closest = ev.target.closest(".timetable-entry") as HTMLElement | null;
