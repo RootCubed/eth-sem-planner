@@ -3,7 +3,7 @@ name: Scrape VVZ and copy to nethz
 on: [workflow_dispatch]
 
 jobs:
-    build_maps:
+    scrape_vvz:
         runs-on: ubuntu-22.04
         steps:
             - name: Checkout repo
@@ -16,6 +16,9 @@ jobs:
 
             - name: Install dependencies
               run: npm install
+
+            - name: Prepare output directory
+              run: mkdir -p dist
               
             - name: Scrape VVZ
               run: node scraper.js -l en -d "Computer Science Bachelor" -s 2023W -o dist/HS23.json
