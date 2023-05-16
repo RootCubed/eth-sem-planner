@@ -97,7 +97,7 @@ export class Application {
 
 const app = new Application();
 
-fetch("/HS23.json").then(res => res.json()).then((courseData: CourseData) => {
+fetch("./HS23.json").then(res => res.json()).then((courseData: CourseData) => {
     app.parseCourses(courseData);
 
     // Hardcoded for now
