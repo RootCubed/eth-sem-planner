@@ -1,0 +1,27 @@
+name: Deploy to nethz
+
+on: [push]
+
+jobs:
+    build_and_deploy:
+        runs-on: ubuntu-22.04
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v3
+
+            - name: Setup node.js
+              uses: actions/setup-node@v3
+              with:
+                node-version: 18
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Build website
+              run: npm run tsc && npm run copy
+
+            - name: Ensure sshpass is installed
+              run: sudo apt install sshpass
+
+            - name: Deploy to nethz
+              run: sshpass -p '${{secrets.NETHZ_PASSWORD}}' rsync -e "ssh -o StrictHostKeyChecking=no" -avz dist/ ${{secrets.NETHZ_USERNAME}}@slab1.ethz.ch:~/homepage/eth-sem-planner
