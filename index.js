@@ -1,14 +1,7 @@
 import express from "express";
-import fs from "fs";
 
 const app = express();
 app.use(express.static("./dist"));
-
-const lectureData = JSON.parse(fs.readFileSync("coursedata.json", "utf-8"));
-
-app.get("/resources/:sem", async (req, res) => {
-    res.json(lectureData);
-});
 
 const PORT = parseInt(process.env.PORT ?? "3000");
 

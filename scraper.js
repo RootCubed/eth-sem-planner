@@ -1,38 +1,81 @@
 import { JSDOM } from "jsdom";
 import * as fs from "fs";
+import { argv } from "process";
+import { parseArgs } from "node:util";
 
-/*
-// English
-const DAY_LOOKUP = {
-    "Mon": "Monday",
-    "Tue": "Tuesday",
-    "Wed": "Wednesday",
-    "Thu": "Thursday",
-    "Fri": "Friday"
-};
-const DEGREE_NAME = "Computer Science Bachelor";
-const PAGE_REGEX = /Page 1 of (\d+)/;
-const CREDITS_REGEX = /<td>\d+ credits<\/td>/g;
-*/
-// German
-const DAY_LOOKUP = {
-    "Mo": "Monday",
-    "Di": "Tuesday",
-    "Mi": "Wednesday",
-    "Do": "Thursday",
-    "Fr": "Friday"
-};
-const DEGREE_NAME = "Informatik Bachelor";
-const PAGE_REGEX = /Seite 1 von (\d+)/;
-const CREDITS_REGEX = /<td>\d+ KP<\/td>/g;
+const args = parseArgs({
+    args: argv.slice(2),
+    options: {
+        language: {
+            type: "string",
+            short: "l"
+        },
+        degree_name: {
+            type: "string",
+            short: "d"
+        },
+        semester: {
+            type: "string",
+            short: "s"
+        },
+        output_file: {
+            type: "string",
+            short: "o"
+        }
+    }
+}).values;
 
-const CONFIG = {
-    lang: "de",
-    studyDirID: 102579,
-    sem: "2023S"
+const I18N_CONSTANTS = {
+    de: {
+        DAY_LOOKUP: {
+            "Mo": "Monday",
+            "Di": "Tuesday",
+            "Mi": "Wednesday",
+            "Do": "Thursday",
+            "Fr": "Friday"
+        },
+        PAGE_REGEX: /Seite 1 von (\d+)/,
+        CREDITS_REGEX: /<td>\d+ KP<\/td>/g,
+    },
+    en: {
+        DAY_LOOKUP: {
+            "Mon": "Monday",
+            "Tue": "Tuesday",
+            "Wed": "Wednesday",
+            "Thu": "Thursday",
+            "Fri": "Friday"
+        },
+        PAGE_REGEX: /Page 1 of (\d+)/,
+        CREDITS_REGEX: /<td>\d+ credits?<\/td>/g
+    }
 };
 
-function extractData(document) {
+class Config {
+    constructor(args) {
+        this.language = args.language;
+        this.sem = args.semester;
+        this.degreeName = args.degree_name;
+        this.outputFile = args.output_file;
+        this.studyDirID = null;
+    }
+
+    get scrapeFolder() {
+        return `scrape_result_${this.language}_${this.studyDirID}_${this.sem}`;
+    }
+
+    getLangConst(id) {
+        return I18N_CONSTANTS[this.language][id];
+    }
+
+    async getStudyDirID() {
+        const req = await fetch(`https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/sucheLehrangebotPre.view?lang=${this.language}&cookietest=true`);
+        const html = await req.text();
+        const selections = new JSDOM(html).window.document.querySelectorAll("#studiengangAbschnittId > option");
+        this.studyDirID = [...selections].find(e => e.textContent == this.degreeName).value;
+    }
+}
+
+function extractData(config, document) {
     const title = document.getElementById("contentTop").textContent.replace("\n", "");
     const courseID = title.split(/ +/)[0];
     const courseName = title.split(/ +/).slice(1).join(" ");
@@ -51,7 +94,7 @@ function extractData(document) {
         let data = [];
         for (let i = 0; i < fields.length; i += 3) {
             if (fields[i].textContent != "") {
-                currDay = DAY_LOOKUP[fields[i].textContent];
+                currDay = config.getLangConst("DAY_LOOKUP")[fields[i].textContent];
                 if (currDay == undefined) {
                     currDay = fields[i].textContent;
                 }
@@ -72,7 +115,7 @@ function extractData(document) {
     }
 
     const performanceTable = document.querySelectorAll(".inside > table")[3].querySelector("tbody");
-    const ectsList = performanceTable.innerHTML.match(CREDITS_REGEX);
+    const ectsList = performanceTable.innerHTML.match(config.getLangConst("CREDITS_REGEX"));
     if (ectsList.length > 1) {
         console.warn("Course specifies multiple ECTS credit amounts! Please manually check this course:", courseID, courseName);
     }
@@ -84,7 +127,7 @@ function extractData(document) {
     for (const row of offeredInTable) {
         const programName = row.querySelectorAll("td")[0].textContent;
         const sectionName = row.querySelectorAll("td")[1].textContent;
-        if (programName == DEGREE_NAME) {
+        if (programName == config.getLangConst("DEGREE_NAME")) {
             assignmentOptions.push(sectionName);
         }
         if (programName == "Wissenschaft im Kontext (Science in Perspective)" && sectionName == "D-INFK") {
@@ -112,10 +155,10 @@ async function downloadCourses(config) {
     let endPage;
     let currPage = 1;
     do {
-        let fReq = await fetch(getCourseListLink(currPage, config.sem, config.studyDirID, config.lang));
+        let fReq = await fetch(getCourseListLink(currPage, config.sem, config.studyDirID, config.language));
         let html = await fReq.text();
         if (!endPage) {
-            endPage = parseInt(html.replace(/\s+/g, " ").match(PAGE_REGEX)[1]);
+            endPage = parseInt(html.replace(/\s+/g, " ").match(config.getLangConst("PAGE_REGEX"))[1]);
             if (!(endPage >= 1 && endPage <= 100)) {
                 console.error("Invalid endPage:", endPage);
                 process.exit();
@@ -126,34 +169,37 @@ async function downloadCourses(config) {
         for (const r of courseRows) {
             const link = r.querySelector("a").href;
             let lid = link.match(/lerneinheitId=(\d+)/)[1];
-            let unitReq = await fetch(getLink(config.sem, lid, config.lang));
+            let unitReq = await fetch(getLink(config.sem, lid, config.language));
             let unitHTML = await unitReq.text();
             console.log(lid, "returned", unitReq.status);
             await new Promise(resolve => setTimeout(resolve, 1000));
-            fs.writeFileSync(`scrape_result/${lid}.html`, unitHTML);
+            fs.writeFileSync(`${config.scrapeFolder}/${lid}.html`, unitHTML);
         }
         currPage++;
         console.log("Going to page", currPage);
     } while (currPage <= endPage);
 }
 
-async function main(config) {
-    if (!fs.existsSync("scrape_result")) {
-        fs.mkdirSync("scrape_result");
+async function main() {
+    const conf = new Config(args);
+    await conf.getStudyDirID();
+
+    if (!fs.existsSync(conf.scrapeFolder)) {
+        fs.mkdirSync(conf.scrapeFolder);
+        await downloadCourses(conf);
     }
-    await downloadCourses(config);
 
     let dataset = {};
 
-    for (const file of fs.readdirSync("scrape_result")) {
-        const html = fs.readFileSync(`scrape_result/${file}`, "utf-8");
+    for (const file of fs.readdirSync(conf.scrapeFolder)) {
+        const html = fs.readFileSync(`${conf.scrapeFolder}/${file}`, "utf-8");
         const dom = new JSDOM(html.replace(/&nbsp;/g, " ").replace(/\u00a0/g, ""));
-        const data = extractData(dom.window.document);
+        const data = extractData(conf, dom.window.document);
         dataset[data.id] = data;
         delete dataset[data.id].id;
     }
 
-    fs.writeFileSync("coursedata.json", JSON.stringify(dataset));
+    fs.writeFileSync(conf.outputFile, JSON.stringify(dataset));
 }
 
-main(CONFIG);
+main();
