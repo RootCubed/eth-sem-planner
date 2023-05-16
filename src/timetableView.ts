@@ -108,9 +108,9 @@ class TimetablePeriodGroup {
             periodHTML: period => `
             <span class="entry-title">${period.parentCourse.courseName}</span>
             <span class="entry-room">${period.room}
-            <svg width="15" height="15" xmlns="http://www.w3.org/2000/svg">
+            <!--<svg width="15" height="15" xmlns="http://www.w3.org/2000/svg">
             <path stroke-width="2" d="m1,5 l6,8 l6,-8" stroke="#000" fill="none"/>
-            </svg>
+            </svg>-->
             </span>
             `,
             periodClass: "timetable-entry",
@@ -253,9 +253,7 @@ class DragHandler {
             return { x: ev.clientX, y: ev.clientY };
         } else {
             const targetTouches = [...ev.changedTouches].filter(e => e.target == ev.target);
-            if (targetTouches.length != 1) {
-                console.error("Getting strange touch events", ev);
-            } else {
+            if (targetTouches.length == 1) {
                 return { x: targetTouches[0].clientX, y: targetTouches[0].clientY };
             }
         }

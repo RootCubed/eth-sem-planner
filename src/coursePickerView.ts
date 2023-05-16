@@ -10,14 +10,9 @@ export class CoursePickerView {
         this.coursePicker = containerEl;
 
         const addCourseButton = document.getElementById("course-overview-add-course") as HTMLElement;
-        const courseSearch = document.getElementById("overlay-course-picker-search") as HTMLElement;
 
-        addCourseButton.addEventListener("click", () => courseSearch.classList.remove("hidden"));
-
-        courseSearch.addEventListener("click", ev => {
-            if (ev.target == courseSearch) {
-                courseSearch.classList.add("hidden");
-            }
+        addCourseButton.addEventListener("click", () => {
+            parentApp.courseSearchView.show();
         });
     }
 
@@ -31,5 +26,14 @@ export class CoursePickerView {
             html += course.overviewHTML(true, false);
         }
         this.coursePicker.innerHTML = html;
+
+        for (const _courseOverview of this.coursePicker.getElementsByClassName("course-overview")) {
+            const courseOverview = _courseOverview as HTMLElement;
+            courseOverview.getElementsByClassName("course-overview-remove")[0].addEventListener("click", () => {
+                const courseID = courseOverview.dataset.id;
+                if (!courseID) return;
+                this.parentApp.removeCourse(courseID);
+            });
+        }
     }
 }

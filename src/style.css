@@ -124,7 +124,7 @@ button {
     grid-template-columns: 50px repeat(5, 1fr);
     grid-template-rows: 40px repeat(13, 1fr);
     backface-visibility: hidden;
-    transition: transform 1s;
+    transition: transform 0.75s;
 }
 
 
@@ -224,7 +224,7 @@ span.entry-title {
     padding: 0 50px 10px;
     color: white;
     backface-visibility: hidden;
-    transition: transform 1s;
+    transition: transform 0.75s;
 }
 
 #course-picker-cont.backside {

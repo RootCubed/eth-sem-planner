@@ -52,6 +52,13 @@ export class Application {
         }
     }
 
+    hasCourse(courseID: string) {
+        for (const period of this.timetable.selectedPeriods) {
+            if (period.parentCourse.courseID == courseID) return true;
+        }
+        return false;
+    }
+
     addCourse(courseID: string) {
         const courseObject = this.courses.get(courseID);
         if (!courseObject) return;
@@ -70,6 +77,17 @@ export class Application {
         this.render();
     }
 
+    removeCourse(courseID: string) {
+        const courseObject = this.courses.get(courseID);
+        if (!courseObject) return;
+        for (const [, periods] of courseObject.periods) {
+            for (const p of periods) {
+                this.timetable.selectedPeriods.delete(p);
+            }
+        }
+        this.render();
+    }
+
     render() {
         this.timetable.renderTimetable();
         this.coursePickerView.renderCoursePicker();
@@ -79,17 +97,17 @@ export class Application {
 
 const app = new Application();
 
-fetch("/resources/FS23").then(res => res.json()).then((courseData: CourseData) => {
+fetch("/HS23.json").then(res => res.json()).then((courseData: CourseData) => {
     app.parseCourses(courseData);
 
     // Hardcoded for now
-    const initialCourseSelection = [
+    const initialCourseSelection: string[] = [];/*
         "Tuesday-10/2.HG E 7", "Thursday-10/2.HG E 7", "Wednesday-10/2.HG E 33.5",
         "Wednesday-8/2.ML D 28", "Tuesday-14/2.CHN D 44",
         "Thursday-14/2.HG E 7", "Friday-14/2.HG E 7", "Wednesday-16/3.HG D 7.2",
         "Monday-14/2.HG E 7", "Friday-10/2.HG F 1", "Tuesday-16/2.ML H 44",
         "Wednesday-14/2.ML D 28", "Friday-8/2.ML D 28", "Friday-14/2.CHN C 14",
-    ];
+    ];*/
 
     const courseSelection: Set<CoursePeriod> = new Set();
     for (const [, course] of app.courses) {
