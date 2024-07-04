@@ -6,13 +6,20 @@ import { parseArgs } from "node:util";
 const args = parseArgs({
     args: argv.slice(2),
     options: {
+        // en
         language: {
             type: "string",
             short: "l"
         },
+        // BCS, MCS, etc.
         degree_name: {
             type: "string",
             short: "d"
+        },
+        // Usually '5' for Computer Science
+        dept_id: {
+            type: "string",
+            short: "i"
         },
         semester: {
             type: "string",
@@ -56,22 +63,15 @@ class Config {
         this.sem = args.semester;
         this.degreeName = args.degree_name;
         this.outputFile = args.output_file;
-        this.studyDirID = null;
+        this.deptId = args.dept_id;
     }
 
     get scrapeFolder() {
-        return `scrape_result_${this.language}_${this.studyDirID}_${this.sem}`;
+        return `scrape_result_${this.language}_${this.deptId}_${this.sem}`;
     }
 
     getLangConst(id) {
         return I18N_CONSTANTS[this.language][id];
-    }
-
-    async getStudyDirID() {
-        const req = await fetch(`https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/sucheLehrangebotPre.view?lang=${this.language}&cookietest=true`);
-        const html = await req.text();
-        const selections = new JSDOM(html).window.document.querySelectorAll("#studiengangAbschnittId > option");
-        this.studyDirID = [...selections].find(e => e.textContent == this.degreeName).value;
     }
 }
 
@@ -148,14 +148,15 @@ function extractData(config, document) {
     };
 }
 
-const getCourseListLink = (page, sem, studydir, lang) => `https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/sucheLehrangebot.view?lerneinheitscode=&deptId=&famname=&unterbereichAbschnittId=&seite=${page}&lerneinheitstitel=&rufname=&kpRange=0,999&lehrsprache=&bereichAbschnittId=&semkez=${sem}&studiengangAbschnittId=${studydir}&studiengangTyp=&ansicht=1&lang=${lang}&katalogdaten=&wahlinfo=`;
-const getLink = (sem, lid, lang) => `https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/lerneinheit.view?semkez=${sem}&ansicht=ALLE&lerneinheitId=${lid}&lang=${lang}`;
+const baseUrl = "https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis";
+const getCourseListLink = (page, sem, deptId, lang) => `${baseUrl}/sucheLehrangebot.view?deptId=${deptId}&seite=${page}&semkez=${sem}&lang=${lang}`;
+const getLink = (sem, lid, lang) => `${baseUrl}/lerneinheit.view?semkez=${sem}&ansicht=ALLE&lerneinheitId=${lid}&lang=${lang}`;
 
 async function downloadCourses(config) {
     let endPage;
     let currPage = 1;
     do {
-        let fReq = await fetch(getCourseListLink(currPage, config.sem, config.studyDirID, config.language));
+        let fReq = await fetch(getCourseListLink(currPage, config.sem, config.deptId, config.language));
         let html = await fReq.text();
         if (!endPage) {
             endPage = parseInt(html.replace(/\s+/g, " ").match(config.getLangConst("PAGE_REGEX"))[1]);
@@ -182,7 +183,6 @@ async function downloadCourses(config) {
 
 async function main() {
     const conf = new Config(args);
-    await conf.getStudyDirID();
 
     if (!fs.existsSync(conf.scrapeFolder)) {
         fs.mkdirSync(conf.scrapeFolder);

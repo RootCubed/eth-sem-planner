@@ -21,7 +21,9 @@ jobs:
               run: mkdir -p dist
               
             - name: Scrape VVZ
-              run: node scraper.js -l en -d "Computer Science Bachelor" -s 2024W -o dist/HS24.json
+              run: |
+                node scraper.js -l en -d "BSC" -i "5" -s 2024W -o dist/HS24-bsc.json
+                node scraper.js -l en -d "MSC" -i "5" -s 2024W -o dist/HS24-msc.json
 
             - name: Ensure sshpass is installed
               run: sudo apt install sshpass
