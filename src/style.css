@@ -349,9 +349,20 @@ span.entry-title {
     padding: 20px;
 }
 
-.course-picker-search-input {
+.course-picker-search-bar {
+    display: flex;
+    gap: 10px;
     width: 100%;
     max-width: 800px;
+}
+
+.course-picker-search-input {
+    width: 100%;
+    border-radius: 10px;
+}
+
+.course-picker-search-button {
+    border-radius: 10px;
 }
 
 .course-picker-search-list {
