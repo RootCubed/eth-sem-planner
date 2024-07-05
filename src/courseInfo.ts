@@ -69,12 +69,13 @@ export class Course {
     assignmentOptions: string[];
     periods: Map<CoursePeriodType, CoursePeriod[]>;
     hoursForPeriodType: Map<CoursePeriodType, number>;
+    degree: "BSC" | "MSC";
 
     constructor(
         courseID: string, courseName: string, ectsCredits: number, vvzLink: string,
         assignmentOptions: string[],
         periods: Map<CoursePeriodType, CoursePeriod[]>,
-        hoursForPeriodType: Map<CoursePeriodType, number>) {
+        hoursForPeriodType: Map<CoursePeriodType, number>, degree: "BSC" | "MSC") {
         this.courseID = courseID;
         this.courseName = courseName;
         this.ectsCredits = ectsCredits;
@@ -82,6 +83,7 @@ export class Course {
         this.assignmentOptions = assignmentOptions;
         this.periods = periods;
         this.hoursForPeriodType = hoursForPeriodType;
+        this.degree = degree;
     }
 
     overviewHTML(deleteButton: boolean, addButton: boolean) {
@@ -128,5 +130,6 @@ export interface CourseData {
                 }[]
             }
         }
+        degreeName: "BSC" | "MSC"
     }
 }

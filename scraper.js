@@ -6,13 +6,21 @@ import { parseArgs } from "node:util";
 const args = parseArgs({
     args: argv.slice(2),
     options: {
+        // Language for VVZ, either "de" or "en"
         language: {
             type: "string",
             short: "l"
         },
+        // Degrees, e.g. "MSC" or "BSC"
         degree_name: {
             type: "string",
+            multiple: true,
             short: "d"
+        },
+        // Usually "5" for Computer Science
+        dept_id: {
+            type: "string",
+            short: "i"
         },
         semester: {
             type: "string",
@@ -56,22 +64,15 @@ class Config {
         this.sem = args.semester;
         this.degreeName = args.degree_name;
         this.outputFile = args.output_file;
-        this.studyDirID = null;
+        this.deptId = args.dept_id;
     }
 
     get scrapeFolder() {
-        return `scrape_result_${this.language}_${this.studyDirID}_${this.sem}`;
+        return `scrape_result_${this.language}_${this.deptId}_${this.sem}`;
     }
 
     getLangConst(id) {
         return I18N_CONSTANTS[this.language][id];
-    }
-
-    async getStudyDirID() {
-        const req = await fetch(`https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/sucheLehrangebotPre.view?lang=${this.language}&cookietest=true`);
-        const html = await req.text();
-        const selections = new JSDOM(html).window.document.querySelectorAll("#studiengangAbschnittId > option");
-        this.studyDirID = [...selections].find(e => e.textContent == this.degreeName).value;
     }
 }
 
@@ -148,14 +149,17 @@ function extractData(config, document) {
     };
 }
 
-const getCourseListLink = (page, sem, studydir, lang) => `https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/sucheLehrangebot.view?lerneinheitscode=&deptId=&famname=&unterbereichAbschnittId=&seite=${page}&lerneinheitstitel=&rufname=&kpRange=0,999&lehrsprache=&bereichAbschnittId=&semkez=${sem}&studiengangAbschnittId=${studydir}&studiengangTyp=&ansicht=1&lang=${lang}&katalogdaten=&wahlinfo=`;
-const getLink = (sem, lid, lang) => `https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis/lerneinheit.view?semkez=${sem}&ansicht=ALLE&lerneinheitId=${lid}&lang=${lang}`;
+const baseUrl = "https://www.vorlesungen.ethz.ch/Vorlesungsverzeichnis";
+const getCourseListLink = (page, sem, deptId, lang, degreeName) => `${baseUrl}/sucheLehrangebot.view?deptId=${deptId}&seite=${page}&semkez=${sem}&lang=${lang}&studiengangTyp=${degreeName}`;
+const getLink = (sem, lid, lang) => `${baseUrl}/lerneinheit.view?semkez=${sem}&ansicht=ALLE&lerneinheitId=${lid}&lang=${lang}`;
 
-async function downloadCourses(config) {
+async function downloadCourses(config, degreeName) {
     let endPage;
     let currPage = 1;
     do {
-        let fReq = await fetch(getCourseListLink(currPage, config.sem, config.studyDirID, config.language));
+        const fetchPath = getCourseListLink(currPage, config.sem, config.deptId, config.language, degreeName);
+        console.log("fetching:", fetchPath);
+        let fReq = await fetch(fetchPath);
         let html = await fReq.text();
         if (!endPage) {
             endPage = parseInt(html.replace(/\s+/g, " ").match(config.getLangConst("PAGE_REGEX"))[1]);
@@ -173,7 +177,7 @@ async function downloadCourses(config) {
             let unitHTML = await unitReq.text();
             console.log(lid, "returned", unitReq.status);
             await new Promise(resolve => setTimeout(resolve, 1000));
-            fs.writeFileSync(`${config.scrapeFolder}/${lid}.html`, unitHTML);
+            fs.writeFileSync(`${config.scrapeFolder}/${degreeName}/${lid}.html`, unitHTML);
         }
         currPage++;
         console.log("Going to page", currPage);
@@ -182,22 +186,31 @@ async function downloadCourses(config) {
 
 async function main() {
     const conf = new Config(args);
-    await conf.getStudyDirID();
 
     if (!fs.existsSync(conf.scrapeFolder)) {
         fs.mkdirSync(conf.scrapeFolder);
-        await downloadCourses(conf);
+        for (const deg of conf.degreeName) {
+            if (!fs.existsSync(`${conf.scrapeFolder}/${deg}`)) {
+                fs.mkdirSync(`${conf.scrapeFolder}/${deg}`);
+            }
+            await downloadCourses(conf, deg);
+        }
     }
 
     let dataset = {};
 
-    for (const file of fs.readdirSync(conf.scrapeFolder)) {
-        const html = fs.readFileSync(`${conf.scrapeFolder}/${file}`, "utf-8");
-        const dom = new JSDOM(html.replace(/&nbsp;/g, " ").replace(/\u00a0/g, ""));
-        const data = extractData(conf, dom.window.document);
-        dataset[data.id] = data;
-        delete dataset[data.id].id;
+
+    for (const deg of conf.degreeName) {
+        for (const file of fs.readdirSync(`${conf.scrapeFolder}/${deg}`)) {
+            const html = fs.readFileSync(`${conf.scrapeFolder}/${deg}/${file}`, "utf-8");
+            const dom = new JSDOM(html.replace(/&nbsp;/g, " ").replace(/\u00a0/g, ""));
+            const data = extractData(conf, dom.window.document);
+            data["degreeName"] = deg;
+            dataset[data.id] = data;
+            delete dataset[data.id].id;
+        }
     }
+
 
     fs.writeFileSync(conf.outputFile, JSON.stringify(dataset));
 }

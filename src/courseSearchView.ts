@@ -5,16 +5,21 @@ export class CourseSearchView {
     private searchView: HTMLElement;
     private searchEl: HTMLInputElement;
     private listEl: HTMLElement;
+    private masterButtonEl: HTMLElement;
+    private showMsc: boolean;
 
     constructor(parentApp: Application, containerEl: HTMLElement) {
         this.parentApp = parentApp;
         this.searchView = containerEl;
+        this.showMsc = false;
 
         const searchEl = containerEl.querySelector("input");
         const listEl = containerEl.querySelector(".course-picker-search-list");
+        const masterEl = containerEl.querySelector(".course-picker-search-button");
 
         this.searchEl = searchEl as HTMLInputElement;
         this.listEl = listEl as HTMLElement;
+        this.masterButtonEl = masterEl as HTMLElement;
 
         this.searchEl.addEventListener("input", () => this.renderSearchView());
 
@@ -22,6 +27,7 @@ export class CourseSearchView {
             if (ev.target == containerEl) {
                 this.hide();
             }
+            this.renderSearchView();
         });
     }
 
@@ -31,8 +37,12 @@ export class CourseSearchView {
         const searchQuery = this.searchEl.value.toLowerCase();
         const filteredCourses = [...this.parentApp.timetable.courses.values()].filter(course => {
             if (this.parentApp.hasCourse(course.courseID)) return false;
+            if ((!this.showMsc && course.degree === "MSC") || (this.showMsc && course.degree === "BSC")) return false;
             return course.courseName.toLowerCase().includes(searchQuery);
         });
+
+        this.masterButtonEl.innerHTML = this.showMsc ? "Show BSc courses": "Show MSc courses";
+        this.masterButtonEl.onclick = () => this.showMsc = !this.showMsc;
 
         for (const course of filteredCourses) {
             html += course.overviewHTML(false, true);
@@ -55,6 +65,7 @@ export class CourseSearchView {
     show() {
         this.searchView.classList.remove("hidden");
         this.searchEl.focus();
+        this.renderSearchView();
     }
 
     hide() {
