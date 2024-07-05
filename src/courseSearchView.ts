@@ -41,7 +41,7 @@ export class CourseSearchView {
             return course.courseName.toLowerCase().includes(searchQuery);
         });
 
-        this.masterButtonEl.innerHTML = this.showMsc ? "Show BSC courses": "Show MSC courses";
+        this.masterButtonEl.innerHTML = this.showMsc ? "Show BSc courses": "Show MSc courses";
         this.masterButtonEl.onclick = () => this.showMsc = !this.showMsc;
 
         for (const course of filteredCourses) {
@@ -65,6 +65,7 @@ export class CourseSearchView {
     show() {
         this.searchView.classList.remove("hidden");
         this.searchEl.focus();
+        this.renderSearchView();
     }
 
     hide() {

@@ -6,17 +6,18 @@ import { parseArgs } from "node:util";
 const args = parseArgs({
     args: argv.slice(2),
     options: {
-        // en
+        // Language for VVZ, either "de" or "en"
         language: {
             type: "string",
             short: "l"
         },
-        // Comma separated list of degrees. Ex: 'BCS,MCS'
+        // Degrees, e.g. "MSC" or "BSC"
         degree_name: {
             type: "string",
+            multiple: true,
             short: "d"
         },
-        // Usually '5' for Computer Science
+        // Usually "5" for Computer Science
         dept_id: {
             type: "string",
             short: "i"
@@ -185,11 +186,10 @@ async function downloadCourses(config, degreeName) {
 
 async function main() {
     const conf = new Config(args);
-    const degrees = conf.degreeName.split(",");
 
     if (!fs.existsSync(conf.scrapeFolder)) {
         fs.mkdirSync(conf.scrapeFolder);
-        for (const deg of degrees) {
+        for (const deg of conf.degreeName) {
             if (!fs.existsSync(`${conf.scrapeFolder}/${deg}`)) {
                 fs.mkdirSync(`${conf.scrapeFolder}/${deg}`);
             }
@@ -200,7 +200,7 @@ async function main() {
     let dataset = {};
 
 
-    for (const deg of degrees) {
+    for (const deg of conf.degreeName) {
         for (const file of fs.readdirSync(`${conf.scrapeFolder}/${deg}`)) {
             const html = fs.readFileSync(`${conf.scrapeFolder}/${deg}/${file}`, "utf-8");
             const dom = new JSDOM(html.replace(/&nbsp;/g, " ").replace(/\u00a0/g, ""));
